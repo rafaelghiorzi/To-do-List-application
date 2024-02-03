@@ -7,6 +7,12 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    extend: {
+      colors: {
+        darkBackground: "#343541", // example of dark background color
+        darkText: "#cbd5e0", // example of dark text color
+      },
+    },
     screens: {
       sm: "480px",
       md: "768px",
@@ -26,13 +32,13 @@ module.exports = {
       gray: "#8492a6",
       "gray-light": "#d3dce6",
       black: "#000000",
-      offwhite: "#F0F0F0",
+      offwhite: "#E0E0E0",
+      darkBackground: "#171719",
     },
     body: {
       margin: "0",
       padding: "0",
     },
-    extend: {},
   },
   plugins: [],
 };
