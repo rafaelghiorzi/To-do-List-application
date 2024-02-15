@@ -1,27 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TodoListItem } from "./components/Taskitems";
 import ThemeButton from "./components/themeButton";
 
+function useSessionStorage(key, defaultValue) {
+  const [state, setState] = useState(() => {
+    if (typeof window !== "undefined") {
+      const storedValue = sessionStorage.getItem(key);
+      return storedValue ? JSON.parse(storedValue) : defaultValue;
+    } else {
+      return defaultValue;
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(key, JSON.stringify(state));
+    }
+  }, [key, state]);
+
+  return [state, setState];
+}
+
 export default function Home() {
-  const [tasks, setTasks] = useState([
-    { id: 1, text: "Finalizar modo escuro", completed: true },
-    { id: 2, text: "Implementar drag and drop", completed: false },
-    { id: 3, text: "Implementar pop up de certeza", completed: false },
-    { id: 4, text: "Implementar design responsivo", completed: true },
-    {
-      id: 5,
-      text: "Botar as tarefas no cache ou algo assim",
-      completed: false,
-    },
-    {
-      id: 6,
-      text: "Arrumar a paleta de cores do tema escuro",
-      completed: false,
-    },
-    //more tasks ...
-  ]);
+  const [tasks, setTasks] = useSessionStorage("tasks", []);
 
   const [filter, setFilter] = useState("all");
 
@@ -57,10 +60,23 @@ export default function Home() {
     );
   }
 
+  const handleAddTask = () => {
+    const taskText = document.querySelector("input").value.trim();
+    if (taskText !== "") {
+      const newTask = {
+        id: Date.now(),
+        text: taskText,
+        completed: false,
+      };
+      setTasks([...tasks, newTask]);
+      document.querySelector("input").value = "";
+    }
+  };
+
   return (
     <main
       className={`h-screen w-screen text-lg sm:text-lg md:text-lg lg:text-xl xl:text-2xl relative ${
-        theme === "dark" ? "bg-white" : "bg-darkBackground text-white"
+        theme === "dark" ? "bg-white" : "bg-darkModeBackground text-white"
       }`}
       id="tela"
     >
@@ -81,35 +97,30 @@ export default function Home() {
 
       <main
         className={`m-auto w-3/4 border-2 pt-2 rounded-xl flex-col mb-10 ${
-          theme === "dark" ? "" : ""
+          theme === "dark" ? "border-black" : "border-borderDark"
         }`}
       >
         <section className="text-justify w-full p-2">
           <div className="w-full">
             <input
               autoFocus
-              className="border-2 p-1 px-2 flex-grow flex-row text-black"
+              className={`border-2 p-1 px-2 flex-grow flex-row ${
+                theme === "dark"
+                  ? "bg-white text-black border-black"
+                  : "bg-inputDark text-white border-borderDark"
+              }`}
               style={{ borderRadius: "9px", width: "73%" }}
               type="text"
               placeholder="New task"
             />
             <button
               className={`border-2 p-1 m-2 ml-1 hover:bg-terracota transition-colors duration-300 ${
-                theme === "dark" ? "bg-black text-white" : "bg-white text-black"
+                theme === "dark"
+                  ? "bg-black text-white border-borderDark"
+                  : "bg-white text-black border-black"
               }`}
               style={{ borderRadius: "9px", width: "23%" }}
-              onClick={() => {
-                const taskText = document.querySelector("input").value.trim();
-                if (taskText !== "") {
-                  const newTask = {
-                    id: Date.now(),
-                    text: taskText,
-                    completed: false,
-                  };
-                  setTasks([...tasks, newTask]);
-                  document.querySelector("input").value = "";
-                }
-              }}
+              onClick={handleAddTask}
             >
               Add
             </button>
@@ -142,7 +153,7 @@ export default function Home() {
         </section>
         <section
           className={`justify-around py-1 px-2 flex rounded-b-xl font-light bg-gray-dark" ${
-            theme === "dark" ? "offwhite" : "bg-gray"
+            theme === "dark" ? "bg-white" : "bg-footerDark"
           }`}
         >
           <span className="font-medium hidden sm:hidden md:inline lg:inline xl:inline transition duration-300">
@@ -183,7 +194,8 @@ export default function Home() {
           <button /* this button will erase from the list all items that are tagged as completed */
             className="hover:text-terracota hidden sm:inline md:inline lg:inline xl:inline transition duration-300"
             onClick={() => {
-              setTasks(tasks.filter((tasks) => !tasks.completed));
+              const incompleteTasks = tasks.filter((task) => !task.completed);
+              setTasks(incompleteTasks);
             }}
           >
             Clean completed
